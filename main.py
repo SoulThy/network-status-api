@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status, Response
 from pydantic import BaseModel
 from pydantic.networks import IPvAnyAddress
 from pathlib import Path
@@ -32,22 +32,29 @@ def read_devices():
 
 
 @app.put("/devices/{device_id}")
-def update_device(device_id: str, device: Device):
+def update_or_create_device(device_id: str, device: Device, response: Response):
     if device_id != device.id:
         raise HTTPException(
-            status_code=400,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="device id in path and body do not match",
         )
 
     if not device_id.replace("-", "").replace("_", "").isalnum():
         raise HTTPException(
-            status_code=400,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="invalid characters in device id",
         )
 
     device_path = DEVICES_DIR / f"{device_id.lower()}.json"
 
+    if not device_path.exists():
+        response.status_code = status.HTTP_201_CREATED
+        message = "device {device_id} created"
+    else:
+        response.status_code = status.HTTP_200_OK
+        message = "device {device_id} updated"
+
     with open(device_path, "w") as f:
         json.dump(device.model_dump(mode="json"), f, indent=2)
 
-    return {"message": f"device {device_id} updated"}
+    return {"message": message}
