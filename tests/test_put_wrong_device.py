@@ -15,12 +15,12 @@ def test_put_device(monkeypatch, tmp_path):
                 "id": f"{device_id}",
                 "name": "Test Device",
                 "type": "switch",
-                "ip": "192.168.1.1",
+                "ip": "192.168.1.999",
                 "status": "on"
                 }
             )
 
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
     
     created_file = tmp_path / f"{device_id.lower()}.json"
-    assert created_file.exists()
+    assert not created_file.exists()
