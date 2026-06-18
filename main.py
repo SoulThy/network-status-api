@@ -50,7 +50,7 @@ def update_or_create_device(device_id: str, device: Device, response: Response):
     device_path = DEVICES_DIR / f"{device_id.lower()}.json"
 
     if not device_path.exists():
-        response.status_code = status.HTTP_200_OK
+        response.status_code = status.HTTP_201_CREATED
         message = "device {device_id} created"
     else:
         response.status_code = status.HTTP_200_OK
