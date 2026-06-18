@@ -29,8 +29,6 @@ def read_devices():
             devices.append(Device(**json.load(f)))
     return devices
 
-
-
 @app.put("/devices/{device_id}")
 def update_or_create_device(device_id: str, device: Device, response: Response):
     if device_id != device.id:
