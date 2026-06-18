@@ -10,6 +10,7 @@ BASE_DIR = Path(__file__).parent
 DEVICES_DIR = BASE_DIR / "devices"
 DEVICES_DIR.mkdir(exist_ok=True)
 
+
 class Device(BaseModel):
     id: str
     name: str
@@ -17,9 +18,11 @@ class Device(BaseModel):
     ip: IPvAnyAddress
     status: str
 
+
 @app.get("/")
 def read_root():
     return {"message": "network-status-api is running"}
+
 
 @app.get("/devices", response_model=list[Device])
 def read_devices():
@@ -28,6 +31,7 @@ def read_devices():
         with open(file_path, "r") as f:
             devices.append(Device(**json.load(f)))
     return devices
+
 
 @app.put("/devices/{device_id}")
 def update_or_create_device(device_id: str, device: Device, response: Response):
