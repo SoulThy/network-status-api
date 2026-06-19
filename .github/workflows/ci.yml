@@ -7,11 +7,10 @@ on:
     branches: main
 
 jobs:
-  build-and-test:
+  test-and-lint:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository code
+    - name: Checkout repository
       uses: actions/checkout@v6
 
     - name: Set up Python
@@ -32,3 +31,34 @@ jobs:
 
     - name: Run tests with pytest
       run: pytest
+
+  build-and-push-docker-image:
+    needs: test-and-lint
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::275459308866:role/Github-Actions-network-status-api
+        aws-region: eu-north-1
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Build, tag, and push docker image to Amazon ECR
+      env:
+        REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        REPOSITORY: network-status-api
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+        docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
